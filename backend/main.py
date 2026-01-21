@@ -103,8 +103,16 @@ def recommend_songs(req: RecommendRequest):
     ).execute()
 
     # 3. 自分を除外して整形
-    recommendations = [s for s in rpc_res.data if s['id'] != req.song_id][:4]
-
+    recommendations = []
+        for match in rpc_res.data:
+            # 自分自身の曲は除外
+            if match['id'] != req.song_id:
+                recommendations.append({
+                    "title": match['title'],
+                    "artist": match['artist'],
+                    "similarity": match.get('similarity', 0), # RPCが返す類似度
+                    "url": match.get('url', '#')              # ★ここでURLを確実に取得
+                })
     # 4. RAG: AIによる解説生成（ここが新機能！）
     ai_comment = generate_ai_comment(source_song, recommendations)
     
