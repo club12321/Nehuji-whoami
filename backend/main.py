@@ -27,9 +27,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], # Next.jsのURLを許可
+    # allow_origins=["http://localhost:3000"],  ← これをコメントアウトまたは削除
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"], # 全てのHTTPメソッド(GET, POST等)を許可
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
