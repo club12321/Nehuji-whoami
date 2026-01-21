@@ -14,23 +14,29 @@ openai_api_key: str = os.getenv("OPENAI_API_KEY")
 
 if not url or not key:
     raise ValueError("❌ Supabase credentials not found in .env")
-if not openai_api_key:
-    # APIキーがない場合のエラーハンドリング（動作確認用）
-    print("⚠️ Warning: OPENAI_API_KEY not found. AI explanation will be disabled.")
 
 # クライアント初期化
 supabase: Client = create_client(url, key)
-openai.api_key = openai_api_key
-client_openAI = openai.OpenAI(api_key=openai_api_key, base_url="https://api.openai.iniad.org/api/v1",)
+
+# OpenAI設定
+if openai_api_key:
+    openai.api_key = openai_api_key
+    # INIAD環境用設定 (必要なければ削除可)
+    client_openAI = openai.OpenAI(
+        api_key=openai_api_key, 
+        base_url="https://api.openai.iniad.org/api/v1"
+    )
+else:
+    client_openAI = None
 
 app = FastAPI()
 
+# CORS設定 (Render用に全許可)
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["http://localhost:3000"],  ← これをコメントアウトまたは削除
-    allow_origins=["*"],
+    allow_origins=["*"], 
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["*"], 
     allow_headers=["*"],
 )
 
@@ -41,10 +47,9 @@ def generate_ai_comment(source_song, recommended_songs):
     """
     選ばれた曲とレコメンド曲の関係性をAIが解説する関数
     """
-    if not openai_api_key:
-        return "AI Module Offline: Please set OPENAI_API_KEY to enable analysis."
+    if not client_openAI:
+        return "AI Module Offline: Please set OPENAI_API_KEY."
 
-    # プロンプト（AIへの指示書）を作成
     rec_titles = ", ".join([f"『{s['title']}』({s['artist']})" for s in recommended_songs])
     
     prompt = f"""
@@ -61,7 +66,7 @@ def generate_ai_comment(source_song, recommended_songs):
 
     try:
         response = client_openAI.chat.completions.create(
-            model="gpt-4o-mini", # コストパフォーマンス最強モデル
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are a specialized music analysis AI."},
                 {"role": "user", "content": prompt}
@@ -75,7 +80,7 @@ def generate_ai_comment(source_song, recommended_songs):
 
 @app.get("/")
 def read_root():
-    return {"status": "Neto_System Backend Online", "version": "1.1.0 (RAG Enabled)"}
+    return {"status": "Neto_System Backend Online", "version": "1.2.0 (Render Deploy)"}
 
 @app.get("/songs")
 def get_songs():
@@ -93,7 +98,6 @@ def recommend_songs(req: RecommendRequest):
     print(f"🔍 Analyzing audio matrix for: {source_song['title']}...")
 
     # 2. ベクトル検索 (18次元)
-    # 自分自身が含まれるので +1 件取得
     rpc_res = supabase.rpc(
         "match_songs",
         {
@@ -105,22 +109,26 @@ def recommend_songs(req: RecommendRequest):
 
     # 3. 自分を除外して整形
     recommendations = []
+    if rpc_res.data:
         for match in rpc_res.data:
-            # 自分自身の曲は除外
             if match['id'] != req.song_id:
                 recommendations.append({
                     "title": match['title'],
                     "artist": match['artist'],
-                    "similarity": match.get('similarity', 0), # RPCが返す類似度
-                    "url": match.get('url', '#')              # ★ここでURLを確実に取得
+                    "similarity": match.get('similarity', 0),
+                    "url": match.get('url', '#')
                 })
-    # 4. RAG: AIによる解説生成（ここが新機能！）
+
+    # 上位4件に絞る
+    recommendations = recommendations[:4]
+
+    # 4. RAG: AIによる解説生成
     ai_comment = generate_ai_comment(source_song, recommendations)
     
     return {
         "source": source_song['title'],
         "recommendations": recommendations,
-        "ai_analysis": ai_comment # フロントエンドでタイプライター風に表示するテキスト
+        "ai_analysis": ai_comment
     }
 
 if __name__ == "__main__":
