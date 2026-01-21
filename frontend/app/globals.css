@@ -1,0 +1,122 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #050505; /* 漆黒 */
+  --foreground: #00ff41; /* マトリックスグリーン */
+  --terminal-bg: #0a0a0a;
+  --terminal-text: #e0e0e0;
+}
+
+/* frontend/app/globals.css */
+
+body {
+  color: #e0e0e0;
+  /* ダークな背景 + ぼんやりとした緑のオーロラを追加 */
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(255, 0, 200, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(255, 0, 200, 0.05) 0%, transparent 40%),
+    #050505; /* ベースの黒 */
+  
+  /* 全体の高さを確保 */
+  min-height: 100vh;
+}
+
+/* ついでに glass-panel の定義も確認 */
+.glass-panel {
+  background: #0c0c0c8c; /* 透明度を高めに */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(0, 255, 64, 0.082); /* 境界線を少し緑に */
+}
+
+/* ターミナルのカーソル点滅 */
+.xterm-cursor {
+  background-color: var(--foreground) !important;
+  opacity: 0.8;
+}
+
+/* スクロールバーもダークに */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #000;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+/* グリッチエフェクト用アニメーション（後で使います） */
+@keyframes glitch {
+  0% { transform: translate(0) }
+  20% { transform: translate(-2px, 2px) }
+  40% { transform: translate(-2px, -2px) }
+  60% { transform: translate(2px, 2px) }
+  80% { transform: translate(2px, -2px) }
+  100% { transform: translate(0) }
+}
+
+/* ★追加: ホバー時に赤くなりながらグリッチするクラス */
+.glitch-hover {
+  transition: color 5s ease;
+}
+.glitch-hover:hover {
+  color: #ff009d; /* 赤色（サイバーパンクピンク） */
+  animation: glitch 0.001s cubic-bezier(.25, .46, .45, .94) both infinite;
+  text-shadow: 2px 0 #00ff41, -2px 0 #00ffff; /* 色収差エフェクト */
+}
+
+/* frontend/app/globals.css の末尾に追加 */
+
+/* 1. 全体の文字を見やすくする（少しグレーに寄せてコントラスト比を緩和） */
+body {
+  color: #e5e5e5; /* 真っ白(#fff)より目に優しい */
+  letter-spacing: 0.02em; /* 文字間を少し開ける */
+}
+
+/* 2. スクロールバーをカッコよくする */
+::-webkit-scrollbar {
+  width: 8px;
+  background: #05050500;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00ff41; /* ホバー時に緑に光る */
+}
+
+/* 4. 見出しの装飾 */
+h2 {
+  text-shadow: 0 0 10px rgba(0, 255, 65, 0.3); /* 緑のグロー効果 */
+}
+
+/* 文字の視認性を向上 */
+body {
+  color: #e0e0e0; /* 真っ白すぎない読みやすいグレー */
+  line-height: 1.6;
+}
+
+/* スクロールバーをスタイリッシュに */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #050505;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #00ff41;
+}
+
+/* パネル内の文字を少し読みやすくする */
+p {
+  letter-spacing: 0.03em;
+}
